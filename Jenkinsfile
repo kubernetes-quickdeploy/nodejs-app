@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO = 'https://github.com/yourusername/your-nodejs-repo.git'
+        GIT_REPO = 'https://github.com/kubernetes-quickdeploy/nodejs-app.git'
         GIT_BRANCH = 'main'
         CONTAINER_NAME = 'nodejs-app'
         NODE_IMAGE = 'node:16'  // public Node.js image from Docker Hub
