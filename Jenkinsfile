@@ -18,29 +18,43 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
+                echo 'Installing Node.js dependencies...'
                 sh """
-                docker run --rm -v \$(pwd):/usr/src/app -w /usr/src/app ${NODE_IMAGE} npm install
+                docker run --rm \
+                    -v ${env.WORKSPACE}:/usr/src/app \
+                    -w /usr/src/app \
+                    ${NODE_IMAGE} npm install
                 """
             }
         }
 
-        stage('Run Node.js Container') {
+        stage('Run Application') {
             steps {
+                echo 'Running Node.js application in Docker container...'
                 sh """
                 docker stop ${CONTAINER_NAME} || true
                 docker rm ${CONTAINER_NAME} || true
-                docker run -d --name ${CONTAINER_NAME} -p ${APP_PORT}:3000 -v \$(pwd):/usr/src/app -w /usr/src/app ${NODE_IMAGE} node index.js
+
+                docker run -d \
+                    --name ${CONTAINER_NAME} \
+                    -p ${APP_PORT}:3000 \
+                    -v ${env.WORKSPACE}:/usr/src/app \
+                    -w /usr/src/app \
+                    ${NODE_IMAGE} node index.js
                 """
             }
         }
     }
 
     post {
-        always {
-            echo 'Deployment finished.'
+        success {
+            echo "✅ Deployment succeeded!"
         }
         failure {
-            echo 'Deployment failed!'
+            echo "❌ Deployment failed."
+        }
+        always {
+            echo "ℹ️  Pipeline execution complete."
         }
     }
 }
