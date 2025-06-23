@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/YOUR_GITHUB_USERNAME/nodejs-app.git', branch: 'main'
+                git url: 'https://github.com/kubernetes-quickdeploy/nodejs-app.git', branch: 'main'
             }
         }
 
