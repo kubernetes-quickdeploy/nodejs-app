@@ -2,59 +2,48 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO = 'https://github.com/kubernetes-quickdeploy/nodejs-app.git'
-        GIT_BRANCH = 'main'
-        CONTAINER_NAME = 'nodejs-app'
-        NODE_IMAGE = 'node:16'
+        IMAGE_NAME = 'nodejs-app'
+        IMAGE_TAG = 'latest'
         APP_PORT = '3000'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
+                git url: 'https://github.com/YOUR_GITHUB_USERNAME/nodejs-app.git', branch: 'main'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Installing Node.js dependencies...'
-                sh """
-                docker run --rm \
-                    -v ${env.WORKSPACE}:/usr/src/app \
-                    -w /usr/src/app \
-                    ${NODE_IMAGE} npm install
-                """
+                script {
+                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                }
             }
         }
 
-        stage('Run Application') {
+        stage('Run Docker Container') {
             steps {
-                echo 'Running Node.js application in Docker container...'
-                sh """
-                docker stop ${CONTAINER_NAME} || true
-                docker rm ${CONTAINER_NAME} || true
+                script {
+                    // Stop and remove container if exists
+                    sh "docker stop ${IMAGE_NAME} || true"
+                    sh "docker rm ${IMAGE_NAME} || true"
 
-                docker run -d \
-                    --name ${CONTAINER_NAME} \
-                    -p ${APP_PORT}:3000 \
-                    -v ${env.WORKSPACE}:/usr/src/app \
-                    -w /usr/src/app \
-                    ${NODE_IMAGE} node index.js
-                """
+                    // Run the container
+                    sh """
+                    docker run -d --name ${IMAGE_NAME} -p ${APP_PORT}:3000 ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
             }
         }
     }
 
     post {
         success {
-            echo "✅ Deployment succeeded!"
+            echo "✅ Application deployed successfully!"
         }
         failure {
-            echo "❌ Deployment failed."
-        }
-        always {
-            echo "ℹ️  Pipeline execution complete."
+            echo "❌ Deployment failed!"
         }
     }
 }
